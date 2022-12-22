@@ -8,7 +8,7 @@ const protect = asyncHandler(async (req, res, next) => {
     if(req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         try {
             //Extract the token fron the header
-            token = req.header.authorization.split(' ')[1];
+            token = req.headers.authorization.split(' ')[1];
 
             //Verify the token
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -16,8 +16,19 @@ const protect = asyncHandler(async (req, res, next) => {
             //Get user from the token provided
             req.user = await User.findById(decoded.id).select('-password');
 
+            next(); //this basically calls the next middleware code to run
         } catch (error) {
-
+            //console.log(req.headers.authorization.toString());
+            console.log(error);
+            res.status(401);
+            throw new Error('Not authorized');
         }
     }
+
+    if(!token) {
+        res.status(401)
+        throw new ('Not authorized, no token');
+    }
 });
+
+module.exports = { protect };
